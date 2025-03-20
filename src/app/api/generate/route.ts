@@ -1,24 +1,21 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import dotenv from "dotenv"
+import dotenv from "dotenv";
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-
-export async function getAnswer(req: any, res: any) {
-    const { prompt } = await req.json();
-
-    try {
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-        const result = await model.generateContent(prompt);
-        console.log(result.response.text());
-
-        res.send(result)
-    } catch (error) {
-        res.send(error, "fuck u")
-        
-    }
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error(
+    "GEMINI_API_KEY is not defined in the environment variables."
+  );
 }
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
+export async function POST(req: Request, res: Response) {
+  const body = await req.json();
+  const { prompt } = body;
 
+  const result = await model.generateContent(prompt);
+  console.log(result.response.text());
+
+  return Response.json({ result: result.response.text() });
+}
